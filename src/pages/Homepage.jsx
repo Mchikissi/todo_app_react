@@ -1,7 +1,9 @@
+import TodoList from "../features/TodoList";
+
 export default function Homepage() {
   return (
     <div>
-      Home
+      <TodoList/>
     </div>
   )
 }
