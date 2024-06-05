@@ -1,5 +1,8 @@
 import styled from "styled-components"
 import { TiDelete } from "react-icons/ti";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { deleteTodo } from "../services/getTodosApi";
 
 const FirstColumn = styled.div`
   display: flex;
@@ -17,6 +20,22 @@ const Row = styled.li`
   align-items: center;
 `;
 export default function TodoItem({todo, index}) {
+
+  const queryClient = useQueryClient();
+
+  const {mutate, isLoading} = useMutation({
+    mutationFn: deleteTodo,
+    onSuccess: ()=> {
+      queryClient.invalidateQueries({
+        queryKey: ['todos']
+      })
+      toast.success('Successfully deleted todo item.', {duration: 4000})
+    }
+  })
+
+  function handleDelete(id){
+    mutate(id)
+  }
   return (
     <div>
       <Row>
@@ -27,7 +46,7 @@ export default function TodoItem({todo, index}) {
         </FirstColumn>
         <SecondColumn>
           <input type="checkbox" checked={todo.is_completed}/>
-          <TiDelete />
+          <TiDelete style={{color:'red', fontSize: '20px'}} onClick={()=> handleDelete(todo.id)}/>
         </SecondColumn>
       </Row>
     </div>

@@ -1,8 +1,13 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import styled from "styled-components"
+import { createTodo } from "../services/getTodosApi";
+import toast from "react-hot-toast";
 
 const StyledForm = styled.form`
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   margin-top: 50px;
 `;
 
@@ -32,12 +37,65 @@ const Button = styled.button`
     background-color: #d8ae7e;
   }
 `;
+
+const Row = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+`;
+
+const ErrorMessage = styled.div`
+  font-size: 10px;
+  background-color: #ffcdd2;
+  color: #d32f2f;
+  padding: 3px 6px;
+  border-radius: 3px;
+`;
 export default function Form() {
+
+  const {register, handleSubmit, formState: {errors}, reset} = useForm({
+    defaultValues:{
+      title: '',
+      description: ''
+    }
+  })
+
+  console.log(errors);
+
+  const queryClient = useQueryClient();
+
+  const {mutate, isLoading} = useMutation({
+    mutationFn: createTodo,
+    onSuccess: ()=> {
+      toast.success('Todo added successfully')
+      queryClient.invalidateQueries({
+        queryKey: ['todos']
+      })
+      reset();
+    }
+  })
+
+  function onSubmit(data){
+    console.log(data.title)
+    const todo = {
+      title: data.title,
+      description: data.description,
+      is_completed: false
+    }
+
+    mutate(todo);
+  }
   return (
-    <StyledForm>
-      <Input placeholder="Title" style={{width: '350px'}}/>
-      <Input placeholder="Description" style={{width: '480px'}}/>
-      <Button>Add</Button>
+    <StyledForm onSubmit={handleSubmit(onSubmit)}>
+      <Row>
+      <Input placeholder="Title" style={{width: '350px'}} {...register('title', {required: 'Please Enter the title'}, {minLength:2})}/>
+      {errors?.title?.type === 'required' && <ErrorMessage>{errors.title.message}</ErrorMessage>}
+      </Row>
+      <Row>
+      <Input placeholder="Description" style={{width: '480px'}} {...register('description', {required: 'Please Enter the description'}, {minLength: 2})}/>
+      {errors?.description?.type === 'required' && <ErrorMessage>{errors.description.message}</ErrorMessage>}
+      </Row>
+      <Button >Add</Button>
     </StyledForm>
   )
 }
